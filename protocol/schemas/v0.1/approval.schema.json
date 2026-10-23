@@ -1,0 +1,100 @@
+{
+  "$defs": {
+    "Signature": {
+      "additionalProperties": false,
+      "properties": {
+        "alg": {
+          "const": "Ed25519",
+          "title": "Alg",
+          "type": "string"
+        },
+        "value": {
+          "pattern": "^[A-Za-z0-9_-]{86}$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alg",
+        "value"
+      ],
+      "title": "Signature",
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/findajay/open-agent-trust/main/protocol/schemas/v0.1/approval.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A human (or other authorised party) approving or rejecting one request.",
+  "properties": {
+    "approver": {
+      "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+      "title": "Approver",
+      "type": "string"
+    },
+    "decided_at": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "title": "Decided At",
+      "type": "string"
+    },
+    "decision": {
+      "enum": [
+        "approved",
+        "rejected"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._:@/-]+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "maxLength": 1024,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason"
+    },
+    "request_digest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Request Digest",
+      "type": "string"
+    },
+    "signature": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Signature"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "type": {
+      "const": "agentproof.approval/v0.1",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "approver",
+    "request_digest",
+    "decision",
+    "decided_at",
+    "reason",
+    "signature"
+  ],
+  "title": "Approval",
+  "type": "object"
+}

@@ -1,0 +1,104 @@
+{
+  "$defs": {
+    "JsonValue": {},
+    "Signature": {
+      "additionalProperties": false,
+      "properties": {
+        "alg": {
+          "const": "Ed25519",
+          "title": "Alg",
+          "type": "string"
+        },
+        "value": {
+          "pattern": "^[A-Za-z0-9_-]{86}$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alg",
+        "value"
+      ],
+      "title": "Signature",
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/findajay/open-agent-trust/main/protocol/schemas/v0.1/request.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "An agent's signed request to perform one action on one resource.",
+  "properties": {
+    "action": {
+      "maxLength": 256,
+      "minLength": 1,
+      "pattern": "^[^*\\s]+$",
+      "title": "Action",
+      "type": "string"
+    },
+    "agent": {
+      "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+      "title": "Agent",
+      "type": "string"
+    },
+    "arguments": {
+      "additionalProperties": {
+        "$ref": "#/$defs/JsonValue"
+      },
+      "title": "Arguments",
+      "type": "object"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._:@/-]+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "nonce": {
+      "maxLength": 128,
+      "minLength": 16,
+      "title": "Nonce",
+      "type": "string"
+    },
+    "requested_at": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "title": "Requested At",
+      "type": "string"
+    },
+    "resource": {
+      "maxLength": 256,
+      "minLength": 1,
+      "pattern": "^[^*\\s]+$",
+      "title": "Resource",
+      "type": "string"
+    },
+    "signature": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Signature"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "type": {
+      "const": "agentproof.request/v0.1",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "agent",
+    "action",
+    "resource",
+    "arguments",
+    "requested_at",
+    "nonce",
+    "signature"
+  ],
+  "title": "ActionRequest",
+  "type": "object"
+}

@@ -1,0 +1,592 @@
+{
+  "$defs": {
+    "ActionRequest": {
+      "additionalProperties": false,
+      "description": "An agent's signed request to perform one action on one resource.",
+      "properties": {
+        "action": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^[^*\\s]+$",
+          "title": "Action",
+          "type": "string"
+        },
+        "agent": {
+          "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+          "title": "Agent",
+          "type": "string"
+        },
+        "arguments": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Arguments",
+          "type": "object"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:@/-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "nonce": {
+          "maxLength": 128,
+          "minLength": 16,
+          "title": "Nonce",
+          "type": "string"
+        },
+        "requested_at": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Requested At",
+          "type": "string"
+        },
+        "resource": {
+          "maxLength": 256,
+          "minLength": 1,
+          "pattern": "^[^*\\s]+$",
+          "title": "Resource",
+          "type": "string"
+        },
+        "signature": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Signature"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "const": "agentproof.request/v0.1",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "agent",
+        "action",
+        "resource",
+        "arguments",
+        "requested_at",
+        "nonce",
+        "signature"
+      ],
+      "title": "ActionRequest",
+      "type": "object"
+    },
+    "Approval": {
+      "additionalProperties": false,
+      "description": "A human (or other authorised party) approving or rejecting one request.",
+      "properties": {
+        "approver": {
+          "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+          "title": "Approver",
+          "type": "string"
+        },
+        "decided_at": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Decided At",
+          "type": "string"
+        },
+        "decision": {
+          "enum": [
+            "approved",
+            "rejected"
+          ],
+          "title": "Decision",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:@/-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "maxLength": 1024,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reason"
+        },
+        "request_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Request Digest",
+          "type": "string"
+        },
+        "signature": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Signature"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "type": {
+          "const": "agentproof.approval/v0.1",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "approver",
+        "request_digest",
+        "decision",
+        "decided_at",
+        "reason",
+        "signature"
+      ],
+      "title": "Approval",
+      "type": "object"
+    },
+    "Delegation": {
+      "additionalProperties": false,
+      "description": "A signed grant of authority from ``issuer`` to ``subject``.",
+      "properties": {
+        "expires_at": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Expires At",
+          "type": "string"
+        },
+        "id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:@/-]+$",
+          "title": "Id",
+          "type": "string"
+        },
+        "issuer": {
+          "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+          "title": "Issuer",
+          "type": "string"
+        },
+        "may_delegate": {
+          "title": "May Delegate",
+          "type": "boolean"
+        },
+        "not_before": {
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+          "title": "Not Before",
+          "type": "string"
+        },
+        "parent": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "signature": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Signature"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "subject": {
+          "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+          "title": "Subject",
+          "type": "string"
+        },
+        "subject_name": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Subject Name"
+        },
+        "type": {
+          "const": "agentproof.delegation/v0.1",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "id",
+        "issuer",
+        "subject",
+        "subject_name",
+        "scope",
+        "may_delegate",
+        "not_before",
+        "expires_at",
+        "parent",
+        "signature"
+      ],
+      "title": "Delegation",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "ModelEvidence": {
+      "additionalProperties": false,
+      "description": "Which model produced the output an action was based on.",
+      "properties": {
+        "assurance": {
+          "enum": [
+            "gateway_asserted",
+            "provider_signed"
+          ],
+          "title": "Assurance",
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Model",
+          "type": "string"
+        },
+        "output_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Output Digest",
+          "type": "string"
+        },
+        "provider_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Provider Id",
+          "type": "string"
+        },
+        "request_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Request Id",
+          "type": "string"
+        },
+        "route_policy": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Route Policy"
+        },
+        "source": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:@/-]+$",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "assurance",
+        "request_id",
+        "provider_id",
+        "model",
+        "route_policy",
+        "output_digest"
+      ],
+      "title": "ModelEvidence",
+      "type": "object"
+    },
+    "Outcome": {
+      "additionalProperties": false,
+      "properties": {
+        "error_type": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Error Type"
+        },
+        "result_digest": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Result Digest"
+        },
+        "status": {
+          "enum": [
+            "succeeded",
+            "failed",
+            "not_executed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "result_digest",
+        "error_type"
+      ],
+      "title": "Outcome",
+      "type": "object"
+    },
+    "PolicyDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "approvers": {
+          "items": {
+            "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+            "type": "string"
+          },
+          "title": "Approvers",
+          "type": "array"
+        },
+        "effect": {
+          "enum": [
+            "allow",
+            "deny",
+            "require_approval"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "policy_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Policy Digest",
+          "type": "string"
+        },
+        "policy_id": {
+          "maxLength": 128,
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9._:@/-]+$",
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 1024,
+          "title": "Reason",
+          "type": "string"
+        },
+        "rule_id": {
+          "anyOf": [
+            {
+              "maxLength": 128,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9._:@/-]+$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rule Id"
+        }
+      },
+      "required": [
+        "effect",
+        "policy_id",
+        "policy_digest",
+        "rule_id",
+        "approvers",
+        "reason"
+      ],
+      "title": "PolicyDecision",
+      "type": "object"
+    },
+    "Scope": {
+      "additionalProperties": false,
+      "description": "What a delegation permits: action and resource name patterns.",
+      "properties": {
+        "actions": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "pattern": "^[^*\\s]*\\*?$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Actions",
+          "type": "array"
+        },
+        "resources": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "pattern": "^[^*\\s]*\\*?$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Resources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "actions",
+        "resources"
+      ],
+      "title": "Scope",
+      "type": "object"
+    },
+    "Signature": {
+      "additionalProperties": false,
+      "properties": {
+        "alg": {
+          "const": "Ed25519",
+          "title": "Alg",
+          "type": "string"
+        },
+        "value": {
+          "pattern": "^[A-Za-z0-9_-]{86}$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alg",
+        "value"
+      ],
+      "title": "Signature",
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/findajay/open-agent-trust/main/protocol/schemas/v0.1/receipt.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "The gateway's signed record of one request, its authority, decision and outcome.",
+  "properties": {
+    "approval": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Approval"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "decision": {
+      "$ref": "#/$defs/PolicyDecision"
+    },
+    "delegation_chain": {
+      "items": {
+        "$ref": "#/$defs/Delegation"
+      },
+      "maxItems": 16,
+      "minItems": 1,
+      "title": "Delegation Chain",
+      "type": "array"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._:@/-]+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "issued_at": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "title": "Issued At",
+      "type": "string"
+    },
+    "issuer": {
+      "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+      "title": "Issuer",
+      "type": "string"
+    },
+    "model_evidence": {
+      "items": {
+        "$ref": "#/$defs/ModelEvidence"
+      },
+      "maxItems": 32,
+      "title": "Model Evidence",
+      "type": "array"
+    },
+    "outcome": {
+      "$ref": "#/$defs/Outcome"
+    },
+    "prev": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Prev"
+    },
+    "request": {
+      "$ref": "#/$defs/ActionRequest"
+    },
+    "request_digest": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "title": "Request Digest",
+      "type": "string"
+    },
+    "signature": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Signature"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "type": {
+      "const": "agentproof.receipt/v0.1",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "issuer",
+    "issued_at",
+    "request",
+    "request_digest",
+    "delegation_chain",
+    "decision",
+    "approval",
+    "outcome",
+    "model_evidence",
+    "prev",
+    "signature"
+  ],
+  "title": "Receipt",
+  "type": "object"
+}
