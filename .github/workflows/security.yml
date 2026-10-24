@@ -1,0 +1,51 @@
+name: Security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "41 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: Dependency vulnerability scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.32"
+      - run: uv sync --frozen --all-extras
+      - run: make audit
+
+  dependency-review:
+    name: Dependency review (new dependencies in PRs)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: AGPL-3.0, GPL-3.0
+
+  no-secrets:
+    name: No private keys or obvious secrets committed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Reject PEM private keys and common token formats
+        run: |
+          if git grep -nE -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|sk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{36}' -- ':!*.lock'; then
+            echo "Possible secret committed"; exit 1
+          fi
+      - name: Reject JWK private keys outside the published test vectors
+        run: |
+          if git grep -lE '"d": *"[A-Za-z0-9_-]{43}"' -- ':!protocol/test-vectors/**'; then
+            echo "Private JWK committed (only the RFC 8032 test key in protocol/test-vectors is allowed)"; exit 1
+          fi

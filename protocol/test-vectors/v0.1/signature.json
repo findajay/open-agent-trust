@@ -1,0 +1,35 @@
+{
+  "description": "Ed25519 signature over the canonical form of a delegation (RFC 8032 test key 1)",
+  "key": {
+    "kty": "OKP",
+    "crv": "Ed25519",
+    "d": "nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A"
+  },
+  "key_id": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+  "document": {
+    "type": "agentproof.delegation/v0.1",
+    "id": "dlg_vector_1",
+    "issuer": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+    "subject": "ed25519:11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+    "subject_name": "Ünïcødé agent",
+    "scope": {
+      "actions": [
+        "sensor.*"
+      ],
+      "resources": [
+        "plant-7/*"
+      ]
+    },
+    "may_delegate": false,
+    "not_before": "2026-01-01T00:00:00Z",
+    "expires_at": "2026-01-02T00:00:00Z",
+    "parent": null,
+    "signature": null
+  },
+  "signing_input_hex": "6167656e7470726f6f662f76302e31007b22657870697265735f6174223a22323032362d30312d30325430303a30303a30305a222c226964223a22646c675f766563746f725f31222c22697373756572223a22656432353531393a3131715941594b7843726656535f3754795751484f6737686376506170694d6c727749616150634855526f222c226d61795f64656c6567617465223a66616c73652c226e6f745f6265666f7265223a22323032362d30312d30315430303a30303a30305a222c22706172656e74223a6e756c6c2c2273636f7065223a7b22616374696f6e73223a5b2273656e736f722e2a225d2c227265736f7572636573223a5b22706c616e742d372f2a225d7d2c227375626a656374223a22656432353531393a3131715941594b7843726656535f3754795751484f6737686376506170694d6c727749616150634855526f222c227375626a6563745f6e616d65223a22c39c6ec3af63c3b864c3a9206167656e74222c2274797065223a226167656e7470726f6f662e64656c65676174696f6e2f76302e31227d",
+  "signature": {
+    "alg": "Ed25519",
+    "value": "jA8Gk5cL0kdFX1P-kolRzSGyHPaTBKll--0GTeqQhV3C39FVJK9O4mJgOcX8-ebNgbjjyx7OLVlngYfKPjOaDw"
+  },
+  "digest": "sha256:c249203d6791ced96bb7f6e83cfd7d95acb42c8b6c85b66683f1bb2a9ce8d791"
+}

@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="960" height="300" role="img" aria-labelledby="t d">
+  <title id="t">OpenAgentTrust</title>
+  <desc id="d">An agent's signed request passes through the OpenAgentTrust gateway, which checks identity, delegation and policy, and issues a verifiable receipt.</desc>
+  <style>
+    .bg { fill: #f8fafc; }
+    .card { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.5; }
+    .shield { fill: #ecfdf5; stroke: #10b981; stroke-width: 2; }
+    .pill { fill: #ecfdf5; stroke: #a7f3d0; }
+    .h { font: 700 44px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0f172a; letter-spacing: -0.5px; }
+    .acc { fill: #059669; }
+    .tag { font: 600 19px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #334155; }
+    .s { font: 400 15px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #475569; }
+    .m { font: 500 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #64748b; }
+    .pm { font: 600 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #047857; }
+    .ink { fill: #0f172a; }
+    .line { stroke: #cbd5e1; stroke-width: 3; stroke-linecap: round; }
+    .wire { stroke: #cbd5e1; stroke-width: 2; stroke-dasharray: 4 6; fill: none; animation: dash 1.2s linear infinite; }
+    .pulse { fill: #6366f1; }
+    .pulse.ok { fill: #10b981; }
+    .glow { fill: #10b981; opacity: .18; transform-box: fill-box; transform-origin: center; animation: ring 3s ease-out infinite; }
+    .check { fill: none; stroke: #10b981; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: draw 3s ease-in-out infinite; }
+    .badge { fill: #10b981; transform-box: fill-box; transform-origin: center; animation: pop 3s ease-in-out infinite; }
+    .flow { offset-rotate: 0deg; animation: move 3s linear infinite; }
+    .f1 { offset-path: path("M676 150 L752 150"); }
+    .f2 { offset-path: path("M808 150 L870 150"); animation-delay: 1s; }
+    .eye { fill: #6366f1; animation: blink 3s steps(1) infinite; }
+    @keyframes move { 0% { offset-distance: 0%; opacity: 0; } 8% { opacity: 1; } 30% { offset-distance: 100%; opacity: 1; } 34%, 100% { offset-distance: 100%; opacity: 0; } }
+    @keyframes ring { 0% { transform: scale(.7); opacity: .35; } 70%, 100% { transform: scale(1.35); opacity: 0; } }
+    @keyframes draw { 0%, 55% { stroke-dashoffset: 40; } 70%, 92% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 40; } }
+    @keyframes pop { 0%, 55% { transform: scale(0); } 66%, 92% { transform: scale(1); } 100% { transform: scale(0); } }
+    @keyframes blink { 0%, 92% { opacity: 1; } 94% { opacity: .1; } 96%, 100% { opacity: 1; } }
+    @keyframes dash { to { stroke-dashoffset: -20; } }
+    @media (prefers-reduced-motion: reduce) {
+      .flow, .glow, .wire, .eye { animation: none; } .flow { opacity: 0; }
+      .check { animation: none; stroke-dashoffset: 0; } .badge { animation: none; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .shield { fill: #052e22; stroke: #34d399; }
+      .pill { fill: #052e22; stroke: #065f46; }
+      .h, .ink { fill: #f0f6fc; }
+      .acc { fill: #34d399; }
+      .tag { fill: #c9d1d9; }
+      .s { fill: #9da7b3; }
+      .m { fill: #8b949e; }
+      .pm { fill: #6ee7b7; }
+      .line, .wire { stroke: #30363d; }
+      .pulse { fill: #818cf8; }
+      .eye { fill: #818cf8; }
+    }
+  </style>
+  <rect class="bg" width="960" height="300" rx="16"/>
+
+  <!-- headline -->
+  <rect class="pill" x="48" y="46" width="232" height="26" rx="13"/>
+  <text class="pm" x="164" y="63" text-anchor="middle">AgentProof · open protocol</text>
+  <text class="h" x="46" y="124">Open<tspan class="acc">Agent</tspan>Trust</text>
+  <text class="tag" x="48" y="162">Every agent. Every action. Verifiably trusted.</text>
+  <text class="s" x="48" y="196">Identity, delegated authority, policy and human approval,</text>
+  <text class="s" x="48" y="218">sealed into receipts anyone can verify offline.</text>
+  <text class="m" x="48" y="256">Apache-2.0  ·  self-hosted  ·  framework-agnostic</text>
+
+  <g transform="translate(-28 0)">
+  <!-- agent -->
+  <rect class="card" x="600" y="114" width="76" height="72" rx="16"/>
+  <line class="line" x1="638" y1="114" x2="638" y2="100"/>
+  <circle class="pulse" cx="638" cy="96" r="5"/>
+  <circle class="eye" cx="625" cy="146" r="6"/>
+  <circle class="eye" cx="651" cy="146" r="6"/>
+  <rect class="line" x="624" y="166" width="28" height="1" rx="1"/>
+  <text class="m" x="638" y="208" text-anchor="middle">agent</text>
+
+  <!-- gateway shield -->
+  <path class="wire" d="M676 150 L752 150"/>
+  <circle class="glow" cx="780" cy="150" r="44"/>
+  <path class="shield" d="M780 108 L812 120 V148 C812 170 798 186 780 194 C762 186 748 170 748 148 V120 Z"/>
+  <path class="check" d="M766 151 L777 162 L796 140"/>
+  <text class="m" x="780" y="222" text-anchor="middle">gateway</text>
+
+  <!-- receipt -->
+  <path class="wire" d="M812 150 L870 150"/>
+  <path class="card" d="M870 106 H906 L920 120 V194 H870 Z"/>
+  <rect class="line" x="880" y="132" width="30" height="1" rx="1"/>
+  <rect class="line" x="880" y="146" width="24" height="1" rx="1"/>
+  <rect class="line" x="880" y="160" width="30" height="1" rx="1"/>
+  <circle class="badge" cx="915" cy="190" r="11"/>
+  <path d="M909 190 L913.5 194.5 L921 186" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="badge"/>
+  <text class="m" x="895" y="222" text-anchor="middle">receipt</text>
+
+  <circle class="pulse flow f1" r="6"/>
+  <circle class="pulse ok flow f2" r="6"/>
+  </g>
+</svg>

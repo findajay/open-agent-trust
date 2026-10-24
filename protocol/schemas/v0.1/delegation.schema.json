@@ -1,0 +1,155 @@
+{
+  "$defs": {
+    "Scope": {
+      "additionalProperties": false,
+      "description": "What a delegation permits: action and resource name patterns.",
+      "properties": {
+        "actions": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "pattern": "^[^*\\s]*\\*?$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Actions",
+          "type": "array"
+        },
+        "resources": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "pattern": "^[^*\\s]*\\*?$",
+            "type": "string"
+          },
+          "maxItems": 64,
+          "minItems": 1,
+          "title": "Resources",
+          "type": "array"
+        }
+      },
+      "required": [
+        "actions",
+        "resources"
+      ],
+      "title": "Scope",
+      "type": "object"
+    },
+    "Signature": {
+      "additionalProperties": false,
+      "properties": {
+        "alg": {
+          "const": "Ed25519",
+          "title": "Alg",
+          "type": "string"
+        },
+        "value": {
+          "pattern": "^[A-Za-z0-9_-]{86}$",
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "alg",
+        "value"
+      ],
+      "title": "Signature",
+      "type": "object"
+    }
+  },
+  "$id": "https://raw.githubusercontent.com/findajay/open-agent-trust/main/protocol/schemas/v0.1/delegation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "A signed grant of authority from ``issuer`` to ``subject``.",
+  "properties": {
+    "expires_at": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "title": "Expires At",
+      "type": "string"
+    },
+    "id": {
+      "maxLength": 128,
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9._:@/-]+$",
+      "title": "Id",
+      "type": "string"
+    },
+    "issuer": {
+      "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+      "title": "Issuer",
+      "type": "string"
+    },
+    "may_delegate": {
+      "title": "May Delegate",
+      "type": "boolean"
+    },
+    "not_before": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$",
+      "title": "Not Before",
+      "type": "string"
+    },
+    "parent": {
+      "anyOf": [
+        {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Parent"
+    },
+    "scope": {
+      "$ref": "#/$defs/Scope"
+    },
+    "signature": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/Signature"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "subject": {
+      "pattern": "^ed25519:[A-Za-z0-9_-]{43}$",
+      "title": "Subject",
+      "type": "string"
+    },
+    "subject_name": {
+      "anyOf": [
+        {
+          "maxLength": 128,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Subject Name"
+    },
+    "type": {
+      "const": "agentproof.delegation/v0.1",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "id",
+    "issuer",
+    "subject",
+    "subject_name",
+    "scope",
+    "may_delegate",
+    "not_before",
+    "expires_at",
+    "parent",
+    "signature"
+  ],
+  "title": "Delegation",
+  "type": "object"
+}

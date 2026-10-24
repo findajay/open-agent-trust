@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# Demo output and private keys (never commit real keys)
+oat-demo*/
+keys/
+*.key.json
+receipts.jsonl
+ledger.jsonl
+
+.env
+.env.*
+.DS_Store

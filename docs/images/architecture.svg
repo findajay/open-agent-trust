@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
+  <title id="t">How an agent action becomes proof</title>
+  <desc id="d">An organization delegates authority to a planner agent, which delegates a narrower scope to a maintenance agent. The agent's signed request enters the OpenAgentTrust gateway, which authenticates it, evaluates the policy, collects a supervisor's signed approval when required, and runs the tool only if allowed. The gateway appends a signed receipt to a hash-chained ledger that anyone can verify offline. Open Model Fabric can add model evidence.</desc>
+  <style>
+    .bg { fill: #f8fafc; }
+    .card { fill: #ffffff; stroke: #cbd5e1; stroke-width: 1.2; }
+    .gw { fill: #f0fdf4; stroke: #10b981; stroke-width: 1.6; }
+    .stage { fill: #ffffff; stroke: #d1fae5; stroke-width: 1.2; }
+    .opt { fill: #ffffff; stroke: #a5b4fc; stroke-width: 1.2; stroke-dasharray: 5 4; }
+    .lit { fill: #10b981; opacity: 0; animation: glow 8s ease-in-out infinite; }
+    .h { font: 700 15px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0f172a; }
+    .l { font: 600 14px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #0f172a; }
+    .s { font: 400 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; fill: #475569; }
+    .m { font: 500 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #64748b; }
+    .k { font: 700 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: 1px; fill: #94a3b8; }
+    .n { font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; fill: #ffffff; }
+    .num { fill: #10b981; }
+    .wire { stroke: #cbd5e1; stroke-width: 2; fill: none; }
+    .wire.auth { stroke: #fcd34d; }
+    .wire.ev { stroke: #a5b4fc; stroke-dasharray: 4 4; }
+    .tick { stroke: #cbd5e1; stroke-width: 1.2; }
+    .p { offset-rotate: 0deg; opacity: 0; animation: move 8s linear infinite; }
+    .amber { fill: #f59e0b; }
+    .indigo { fill: #6366f1; }
+    .green { fill: #10b981; }
+    .r1 { offset-path: path("M135 128 L135 168"); animation-delay: 0s; }
+    .r2 { offset-path: path("M135 232 L135 272"); animation-delay: .6s; }
+    .r3 { offset-path: path("M230 304 C 270 304, 262 152, 302 152"); animation-delay: 1.3s; }
+    .r4 { offset-path: path("M738 102 L662 102"); animation-delay: 2.1s; }
+    .r5 { offset-path: path("M230 450 C 275 450, 262 322, 302 322"); animation-delay: 3.1s; }
+    .r6 { offset-path: path("M640 407 C 690 407, 690 200, 738 200"); animation-delay: 4.4s; }
+    .r7 { offset-path: path("M662 330 L738 330"); animation-delay: 5.3s; }
+    .r8 { offset-path: path("M833 392 L833 432"); animation-delay: 6.2s; }
+    .g1 { animation-delay: 2.1s; } .g2 { animation-delay: 2.7s; } .g3 { animation-delay: 3.6s; } .g4 { animation-delay: 4.2s; }
+    .newr { opacity: 0; animation: appear 8s ease-out infinite; animation-delay: 5.9s; }
+    .ok { transform-box: fill-box; transform-origin: center; opacity: 0; animation: pop 8s ease-out infinite; animation-delay: 6.8s; }
+    .deny { animation: blink 8s ease-in-out infinite; animation-delay: 2.7s; opacity: .35; }
+    @keyframes move { 0% { offset-distance: 0%; opacity: 0; } 2% { opacity: 1; } 11% { offset-distance: 100%; opacity: 1; } 13%, 100% { offset-distance: 100%; opacity: 0; } }
+    @keyframes glow { 0% { opacity: 0; } 3% { opacity: .16; } 10% { opacity: .16; } 14%, 100% { opacity: 0; } }
+    @keyframes appear { 0% { opacity: 0; transform: translateY(-6px); } 4% { opacity: 1; transform: none; } 14% { opacity: 1; } 17%, 100% { opacity: 0; } }
+    @keyframes pop { 0% { opacity: 0; transform: scale(.4); } 3% { opacity: 1; transform: scale(1.15); } 5% { transform: scale(1); } 12% { opacity: 1; } 14%, 100% { opacity: 0; } }
+    @keyframes blink { 0%, 100% { opacity: .35; } 4%, 10% { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .p, .lit, .newr, .ok, .deny { animation: none; }
+      .ok, .newr { opacity: 1; } .deny { opacity: 1; }
+    }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .card, .stage { fill: #161b22; stroke: #30363d; }
+      .gw { fill: #0b1f17; stroke: #059669; }
+      .opt { fill: #161b22; stroke: #4f46e5; }
+      .h, .l { fill: #f0f6fc; }
+      .s { fill: #9da7b3; }
+      .m { fill: #8b949e; }
+      .k { fill: #6e7681; }
+      .wire, .tick { stroke: #30363d; }
+      .wire.auth { stroke: #92400e; }
+      .wire.ev { stroke: #4338ca; }
+      .indigo { fill: #818cf8; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect class="bg" width="960" height="560" rx="16"/>
+
+  <!-- column labels -->
+  <text class="k" x="40" y="44">AUTHORITY</text>
+  <text class="k" x="302" y="44">ENFORCEMENT</text>
+  <text class="k" x="738" y="44">EVIDENCE</text>
+
+  <!-- authority column -->
+  <rect class="card" x="40" y="64" width="190" height="64" rx="12"/>
+  <text class="l" x="58" y="92">Organization</text>
+  <text class="m" x="58" y="112">trust anchor key</text>
+  <path class="wire auth" d="M135 128 L135 168" marker-end="url(#a)"/>
+  <text class="m" x="145" y="153">delegates</text>
+
+  <rect class="card" x="40" y="168" width="190" height="64" rx="12"/>
+  <text class="l" x="58" y="196">Planner agent</text>
+  <text class="m" x="58" y="216">may re-delegate</text>
+  <path class="wire auth" d="M135 232 L135 272" marker-end="url(#a)"/>
+  <text class="m" x="145" y="257">narrower scope</text>
+
+  <rect class="card" x="40" y="272" width="190" height="64" rx="12"/>
+  <text class="l" x="58" y="300">Maintenance agent</text>
+  <text class="m" x="58" y="320">signs each request</text>
+
+  <rect class="card" x="40" y="418" width="190" height="64" rx="12"/>
+  <text class="l" x="58" y="446">Shift supervisor</text>
+  <text class="m" x="58" y="466">signs approvals</text>
+
+  <path class="wire" d="M230 304 C 270 304, 262 152, 302 152" marker-end="url(#a)"/>
+  <path class="wire auth" d="M230 450 C 275 450, 262 322, 302 322" marker-end="url(#a)"/>
+
+  <!-- gateway -->
+  <rect class="gw" x="302" y="64" width="360" height="430" rx="16"/>
+  <text class="h" x="322" y="94">OpenAgentTrust gateway</text>
+  <text class="m" x="322" y="112">deterministic · no LLM in the loop</text>
+
+  <rect class="stage" x="322" y="124" width="318" height="62" rx="10"/>
+  <rect class="lit g1" x="322" y="124" width="318" height="62" rx="10"/>
+  <circle class="num" cx="344" cy="155" r="11"/><text class="n" x="344" y="159" text-anchor="middle">1</text>
+  <text class="l" x="364" y="150">Authenticate</text>
+  <text class="s" x="364" y="169">agent signature · delegation chain · replay</text>
+
+  <rect class="stage" x="322" y="209" width="318" height="62" rx="10"/>
+  <rect class="lit g2" x="322" y="209" width="318" height="62" rx="10"/>
+  <circle class="num" cx="344" cy="240" r="11"/><text class="n" x="344" y="244" text-anchor="middle">2</text>
+  <text class="l" x="364" y="235">Decide</text>
+  <text class="s" x="364" y="254">policy: allow · require_approval · deny</text>
+  <g class="deny">
+    <rect x="578" y="224" width="52" height="20" rx="10" fill="#fee2e2"/>
+    <text x="604" y="238" text-anchor="middle" style="font: 700 10px ui-monospace, Menlo, Consolas, monospace; fill: #b91c1c">deny ✕</text>
+  </g>
+
+  <rect class="stage" x="322" y="294" width="318" height="62" rx="10"/>
+  <rect class="lit g3" x="322" y="294" width="318" height="62" rx="10"/>
+  <circle class="num" cx="344" cy="325" r="11"/><text class="n" x="344" y="329" text-anchor="middle">3</text>
+  <text class="l" x="364" y="320">Approve</text>
+  <text class="s" x="364" y="339">signed approval for this exact request</text>
+
+  <rect class="stage" x="322" y="379" width="318" height="62" rx="10"/>
+  <rect class="lit g4" x="322" y="379" width="318" height="62" rx="10"/>
+  <circle class="num" cx="344" cy="410" r="11"/><text class="n" x="344" y="414" text-anchor="middle">4</text>
+  <text class="l" x="364" y="405">Execute</text>
+  <text class="s" x="364" y="424">run the tool only if allowed</text>
+
+  <line class="tick" x1="481" y1="186" x2="481" y2="209"/>
+  <line class="tick" x1="481" y1="271" x2="481" y2="294"/>
+  <line class="tick" x1="481" y1="356" x2="481" y2="379"/>
+  <text class="m" x="482" y="474" text-anchor="middle">every authenticated request gets a receipt, denials too</text>
+
+  <!-- evidence column -->
+  <rect class="opt" x="738" y="70" width="190" height="64" rx="12"/>
+  <text class="l" x="756" y="98">Open Model Fabric</text>
+  <text class="m" x="756" y="118">model evidence (optional)</text>
+  <path class="wire ev" d="M738 102 L662 102" marker-end="url(#a)"/>
+
+  <rect class="card" x="738" y="168" width="190" height="64" rx="12"/>
+  <text class="l" x="756" y="196">Tools</text>
+  <text class="m" x="756" y="216">MCP servers · APIs · PLCs</text>
+  <path class="wire" d="M640 407 C 690 407, 690 200, 738 200" marker-end="url(#a)"/>
+
+  <rect class="card" x="738" y="266" width="190" height="126" rx="12"/>
+  <text class="l" x="756" y="292">Receipt ledger</text>
+  <text class="m" x="756" y="310">signed · hash-chained</text>
+  <rect class="stage" x="756" y="322" width="44" height="54" rx="6"/>
+  <rect class="stage" x="806" y="322" width="44" height="54" rx="6"/>
+  <g class="newr">
+    <rect x="856" y="322" width="44" height="54" rx="6" fill="#d1fae5" stroke="#10b981"/>
+    <path d="M868 349 L875 356 L889 342" fill="none" stroke="#047857" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <line class="tick" x1="800" y1="349" x2="806" y2="349"/>
+  <line class="tick" x1="850" y1="349" x2="856" y2="349"/>
+  <path class="wire" d="M662 330 L738 330" marker-end="url(#a)"/>
+  <text class="m" x="700" y="322" text-anchor="middle">receipt</text>
+
+  <path class="wire" d="M833 392 L833 432" marker-end="url(#a)"/>
+  <rect class="card" x="738" y="432" width="190" height="62" rx="12"/>
+  <text class="l" x="756" y="459">Anyone, offline</text>
+  <text class="m" x="756" y="479">oat proof verify</text>
+  <g class="ok">
+    <circle cx="902" cy="463" r="13" fill="#10b981"/>
+    <path d="M895 463 L900 468 L909 458" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- legend -->
+  <circle class="amber" cx="48" cy="530" r="5"/><text class="m" x="60" y="534">authority</text>
+  <circle class="indigo" cx="148" cy="530" r="5"/><text class="m" x="160" y="534">request</text>
+  <circle class="green" cx="238" cy="530" r="5"/><text class="m" x="250" y="534">execution and proof</text>
+  <text class="m" x="928" y="534" text-anchor="end">AgentProof v0.1</text>
+
+  <!-- moving pulses -->
+  <circle class="p amber r1" r="6"/>
+  <circle class="p amber r2" r="6"/>
+  <circle class="p indigo r3" r="6"/>
+  <circle class="p indigo r4" r="5"/>
+  <circle class="p amber r5" r="6"/>
+  <circle class="p green r6" r="6"/>
+  <circle class="p green r7" r="6"/>
+  <circle class="p green r8" r="6"/>
+</svg>
