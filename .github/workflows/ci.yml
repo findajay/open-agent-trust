@@ -28,8 +28,8 @@ jobs:
           - os: macos-latest
             python: "3.13"
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           version: "0.11.32"
       - run: uv sync --frozen --all-extras --python ${{ matrix.python }}
@@ -44,8 +44,8 @@ jobs:
     name: Schemas, test vectors and README art are up to date
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           version: "0.11.32"
       - run: uv sync --frozen
@@ -56,8 +56,8 @@ jobs:
     name: Wheel builds and installs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.2
         with:
           version: "0.11.32"
       - run: uv build
