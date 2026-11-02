@@ -27,7 +27,7 @@ class GatewayClient:
         # Longer than the server's longest long-poll, so a wait never times out locally.
         self.timeout = timeout
 
-    def _call(self, method: str, path: str, body: Any = None) -> Any:
+    def _call(self, method: str, path: str, body: Any = None, *, raw: bool = False) -> Any:
         data = json.dumps(body).encode("utf-8") if body is not None else None
         request = urllib.request.Request(  # noqa: S310 - scheme checked in __init__
             self.base_url + path,
@@ -37,7 +37,8 @@ class GatewayClient:
         )
         try:
             with urllib.request.urlopen(request, timeout=self.timeout) as response:  # noqa: S310
-                return json.loads(response.read())
+                payload = response.read()
+                return payload.decode("utf-8") if raw else json.loads(payload)
         except urllib.error.HTTPError as exc:
             try:
                 message = str(json.loads(exc.read()).get("error", exc.reason))
@@ -69,6 +70,13 @@ class GatewayClient:
     ) -> dict[str, Any]:
         body: dict[str, Any] = {"error_type": error_type} if error_type else {"result": result}
         return dict(self._call("POST", f"/v1/actions/{quote(action_id)}/outcome", body))
+
+    def actions(self) -> list[dict[str, Any]]:
+        return list(self._call("GET", "/v1/actions")["actions"])
+
+    def ledger(self) -> str:
+        """The receipt ledger as JSON Lines."""
+        return str(self._call("GET", "/v1/ledger", raw=True))
 
     def approvals(self) -> list[dict[str, Any]]:
         return list(self._call("GET", "/v1/approvals")["approvals"])

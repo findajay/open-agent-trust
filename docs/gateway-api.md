@@ -46,15 +46,19 @@ loopback.
 | `POST /v1/actions` | `{request, delegation_chain, model_evidence?}` | the action; `403` if the request can't be attributed or is out of scope |
 | `GET /v1/actions/{id}` | `?wait=SECONDS` (max 60) | the action; with `wait`, blocks while approval is pending |
 | `POST /v1/actions/{id}/outcome` | `{result}` or `{error_type}` | the completed action with its receipt |
+| `GET /v1/actions` | | `{actions}`: actions still held in memory (finished ones for an hour), newest first |
 | `GET /v1/approvals` | | actions awaiting approval, oldest first |
 | `POST /v1/approvals/{id}` | `{approval}` (signed document) or `{decision: "approved" \| "rejected", reason?}` | the action |
 | `GET /v1/receipts` | `?limit=50&offset=0` | `{total, receipts: [{ref, receipt}]}`, newest first |
 | `GET /v1/receipts/{ref}` | `agentproof:sha256:…`, `sha256:…` or a receipt id | `{ref, receipt}` |
 | `POST /v1/verify` | `{receipt}` | the verification report (all checks) |
+| `GET /v1/ledger` | | the ledger as JSON Lines (`application/x-ndjson`), oldest first |
 | `GET /v1/ledger/verify` | | the report for the whole ledger |
 
-An action is `{id, status, agent, action, resource, request, request_digest, decision,
-created_at, deadline, receipt_ref, receipt}`. Its status moves like this:
+An action is `{id, status, agent, agent_name, action, resource, references, request,
+request_digest, decision, created_at, deadline, receipt_ref, receipt}`. `agent_name` is the
+`subject_name` of the last delegation link and `references` the string items of
+`request.arguments.references`; both are for display. Its status moves like this:
 
 ```text
 POST /v1/actions ──► allowed ──── outcome reported ────► completed

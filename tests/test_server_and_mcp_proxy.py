@@ -44,8 +44,8 @@ FAKE_SERVER = [sys.executable, str(Path(__file__).with_name("fake_mcp_server.py"
 TOKEN = "test-token-0123456789"
 
 
-def request(world: World, action: str) -> dict[str, Any]:
-    return create_request(world.agent, action, "plant-7/pump/P-3", {"n": 1}, now=NOW)
+def request(world: World, action: str, **arguments: Any) -> dict[str, Any]:
+    return create_request(world.agent, action, "plant-7/pump/P-3", {"n": 1, **arguments}, now=NOW)
 
 
 def service_for(world: World, **kw: Any) -> GatewayService:
@@ -112,6 +112,15 @@ def test_allowed_action_is_receipted_when_the_outcome_is_reported(world: World) 
     assert verified(world, done["receipt"])
     with pytest.raises(ServiceError, match="completed"):
         service.report_outcome(action["id"], {"result": 1})
+
+
+def test_actions_carry_agent_name_and_references(world: World) -> None:
+    service = service_for(world)
+    req = request(world, "sensor.read", references=["recall:memory:abc", 3])
+    action = service.submit({"request": req, "delegation_chain": world.chain})
+    assert action["agent_name"] == world.chain[-1]["subject_name"]
+    assert action["references"] == ["recall:memory:abc"]
+    assert [a["id"] for a in service.actions()] == [action["id"]]
 
 
 def test_denied_action_is_receipted_at_once(world: World) -> None:
@@ -250,6 +259,10 @@ def test_http_round_trip(world: World, http: tuple[GatewayService, GatewayClient
     done = client.report_outcome(action["id"], result={"ok": True})
     assert verified(world, done["receipt"])
     assert client.receipt(done["receipt_ref"])["receipt"] == done["receipt"]
+    [held] = client.actions()
+    assert (held["id"], held["status"], held["references"]) == (action["id"], "completed", [])
+    lines = client.ledger().splitlines()
+    assert [json.loads(line) for line in lines] == [done["receipt"]]
 
 
 def test_http_errors(world: World, http: tuple[GatewayService, GatewayClient]) -> None:

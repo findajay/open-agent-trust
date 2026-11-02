@@ -11,11 +11,13 @@ Endpoints (all JSON, all behind ``Authorization: Bearer <token>``)::
     POST /v1/actions                 {request, delegation_chain, model_evidence?}
     GET  /v1/actions/{id}?wait=SECS  status; long-polls while approval is pending
     POST /v1/actions/{id}/outcome    {result} or {error_type}
+    GET  /v1/actions                 actions held in memory, newest first
     GET  /v1/approvals               actions awaiting approval
     POST /v1/approvals/{id}          {approval} (signed) or {decision, reason?}
     GET  /v1/receipts?limit&offset   newest first
     GET  /v1/receipts/{ref}          by agentproof:sha256:…, sha256:… or receipt id
     POST /v1/verify                  {receipt}
+    GET  /v1/ledger                  JSON Lines, as `oat ledger verify` reads it
     GET  /v1/ledger/verify
 
 Every action ends in exactly one receipt: denied and rejected requests at once, allowed
@@ -44,6 +46,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from . import __version__
+from .canonical import canonical_bytes
 from .gateway import Authorization, Gateway, RequestRejected
 from .keys import SigningKey
 from .ledger import receipt_reference
@@ -73,11 +76,20 @@ class Action:
 
     def to_dict(self) -> dict[str, Any]:
         request = self.auth.model
+        leaf = self.auth.delegation_chain[-1] if self.auth.delegation_chain else {}
+        references = request.arguments.get("references")
         return {
             "id": self.id,
             "status": self.status,
             "agent": request.agent,
+            # The name the delegation gave the agent; informational, not signed by the agent.
+            "agent_name": leaf.get("subject_name"),
             "action": request.action,
+            "references": (
+                [r for r in references if isinstance(r, str)]
+                if isinstance(references, list)
+                else []
+            ),
             "resource": request.resource,
             "request": self.auth.request,
             "request_digest": self.auth.request_digest,
@@ -164,6 +176,12 @@ class GatewayService:
             if wait:
                 self._changed.wait_for(lambda: action.status != "pending_approval", wait)
             return action.to_dict()
+
+    def actions(self) -> list[dict[str, Any]]:
+        """Actions still held in memory (receipted ones until ``retain``), newest first."""
+        with self._changed:
+            held = list(self._actions.values())
+        return [a.to_dict() for a in sorted(held, key=lambda a: a.created_at, reverse=True)]
 
     def approvals(self) -> list[dict[str, Any]]:
         with self._changed:
@@ -283,6 +301,10 @@ class GatewayService:
             policy=self.gateway.policy,
         ).to_dict()
 
+    def ledger_lines(self) -> str:
+        """The ledger as JSON Lines, oldest first, in the form `oat ledger verify` reads."""
+        return "".join(canonical_bytes(r).decode("utf-8") + "\n" for r in self.gateway.ledger)
+
     def verify_ledger(self) -> dict[str, Any]:
         return verify_ledger(
             self.gateway.ledger,
@@ -294,6 +316,7 @@ class GatewayService:
 
 _ROUTES: list[tuple[str, re.Pattern[str], str]] = [
     ("GET", re.compile(r"/v1/info"), "info"),
+    ("GET", re.compile(r"/v1/actions"), "actions"),
     ("POST", re.compile(r"/v1/actions"), "submit"),
     ("GET", re.compile(r"/v1/actions/(?P<id>[\w-]+)"), "action"),
     ("POST", re.compile(r"/v1/actions/(?P<id>[\w-]+)/outcome"), "outcome"),
@@ -302,8 +325,13 @@ _ROUTES: list[tuple[str, re.Pattern[str], str]] = [
     ("GET", re.compile(r"/v1/receipts"), "receipts"),
     ("GET", re.compile(r"/v1/receipts/(?P<ref>[\w:.@/-]+)"), "receipt"),
     ("POST", re.compile(r"/v1/verify"), "verify"),
+    ("GET", re.compile(r"/v1/ledger"), "ledger"),
     ("GET", re.compile(r"/v1/ledger/verify"), "verify_ledger"),
 ]
+
+
+class JsonLines(str):
+    """A response body sent as ``application/x-ndjson`` instead of JSON."""
 
 
 def _int(query: dict[str, list[str]], name: str, default: int) -> int:
@@ -318,6 +346,10 @@ def _dispatch(
 ) -> Any:
     if name == "info":
         return service.info()
+    if name == "actions":
+        return {"actions": service.actions()}
+    if name == "ledger":
+        return JsonLines(service.ledger_lines())
     if name == "submit":
         return service.submit(body)
     if name == "action":
@@ -354,9 +386,13 @@ def make_handler(
             sys.stderr.write(f"oat serve: {self.address_string()} {format % args}\n")
 
         def _send(self, status: HTTPStatus, payload: Any) -> None:
-            data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            if isinstance(payload, JsonLines):
+                data, kind = payload.encode("utf-8"), "application/x-ndjson"
+            else:
+                data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+                kind = "application/json"
             self.send_response(status)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Type", f"{kind}; charset=utf-8")
             self.send_header("Content-Length", str(len(data)))
             self.send_header("Cache-Control", "no-store")
             self._cors()
