@@ -43,7 +43,7 @@ from datetime import datetime, timedelta
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 from . import __version__
 from .canonical import canonical_bytes
@@ -443,7 +443,8 @@ def make_handler(
                 url = urlsplit(self.path)
                 body = self._body() if method == "POST" else None
                 for route_method, pattern, name in _ROUTES:
-                    match = pattern.fullmatch(url.path)
+                    # Clients may percent-encode path members (e.g. ":" in "sha256:…").
+                    match = pattern.fullmatch(unquote(url.path))
                     if match and route_method == method:
                         payload = _dispatch(
                             service, name, match.groupdict(), parse_qs(url.query), body

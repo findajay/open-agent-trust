@@ -97,4 +97,4 @@ class GatewayClient:
         return dict(self._call("POST", f"/v1/approvals/{quote(action_id)}", body))
 
     def receipt(self, ref: str) -> dict[str, Any]:
-        return dict(self._call("GET", f"/v1/receipts/{quote(ref, safe=':')}"))
+        return dict(self._call("GET", f"/v1/receipts/{quote(ref, safe='')}"))
