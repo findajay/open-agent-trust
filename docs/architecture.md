@@ -43,3 +43,8 @@ routes inference across engines. OpenAgentTrust is the action layer: it decides 
 proves what agents may do. They are separate projects with separate release cycles (see
 [ADR 0001](adr/0001-separate-project-from-open-model-fabric.md)). The `omf` integration
 turns an Open Model Fabric response into `model_evidence` on a receipt.
+
+## Integration with other tools
+
+How OpenAgentTrust, Recall, BallastOS and the repository analyzer reference each other
+(receipts by digest, memories, code at a commit, model calls): [shared references](integration/shared-references.md).
