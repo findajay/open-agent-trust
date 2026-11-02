@@ -14,7 +14,7 @@ Endpoints (all JSON, all behind ``Authorization: Bearer <token>``)::
     GET  /v1/actions                 actions held in memory, newest first
     GET  /v1/approvals               actions awaiting approval
     POST /v1/approvals/{id}          {approval} (signed) or {decision, reason?}
-    GET  /v1/receipts?limit&offset   newest first
+    GET  /v1/receipts?limit&offset&reference   newest first; reference filters
     GET  /v1/receipts/{ref}          by agentproof:sha256:…, sha256:… or receipt id
     POST /v1/verify                  {receipt}
     GET  /v1/ledger                  JSON Lines, as `oat ledger verify` reads it
@@ -49,7 +49,7 @@ from . import __version__
 from .canonical import canonical_bytes
 from .gateway import Authorization, Gateway, RequestRejected
 from .keys import SigningKey
-from .ledger import receipt_reference
+from .ledger import receipt_reference, references_of
 from .models import to_document
 from .requests import create_approval
 from .timeutil import format_ts
@@ -77,7 +77,6 @@ class Action:
     def to_dict(self) -> dict[str, Any]:
         request = self.auth.model
         leaf = self.auth.delegation_chain[-1] if self.auth.delegation_chain else {}
-        references = request.arguments.get("references")
         return {
             "id": self.id,
             "status": self.status,
@@ -85,11 +84,7 @@ class Action:
             # The name the delegation gave the agent; informational, not signed by the agent.
             "agent_name": leaf.get("subject_name"),
             "action": request.action,
-            "references": (
-                [r for r in references if isinstance(r, str)]
-                if isinstance(references, list)
-                else []
-            ),
+            "references": references_of(request.arguments),
             "resource": request.resource,
             "request": self.auth.request,
             "request_digest": self.auth.request_digest,
@@ -278,8 +273,15 @@ class GatewayService:
             "ledger": {"length": len(self.gateway.ledger), "head": self.gateway.ledger.head},
         }
 
-    def receipts(self, *, limit: int = 50, offset: int = 0) -> dict[str, Any]:
+    def receipts(
+        self, *, limit: int = 50, offset: int = 0, reference: str | None = None
+    ) -> dict[str, Any]:
+        """Receipts, newest first; with ``reference``, only requests that carry that URI."""
         receipts = list(self.gateway.ledger)[::-1]
+        if reference is not None:
+            receipts = [
+                r for r in receipts if reference in references_of(r["request"]["arguments"])
+            ]
         page = receipts[max(offset, 0) : max(offset, 0) + min(max(limit, 1), 500)]
         return {
             "total": len(receipts),
@@ -365,7 +367,11 @@ def _dispatch(
     if name == "decide":
         return service.decide(params["id"], body)
     if name == "receipts":
-        return service.receipts(limit=_int(query, "limit", 50), offset=_int(query, "offset", 0))
+        return service.receipts(
+            limit=_int(query, "limit", 50),
+            offset=_int(query, "offset", 0),
+            reference=query.get("reference", [None])[0],
+        )
     if name == "receipt":
         return service.receipt(params["ref"])
     if name == "verify":

@@ -452,3 +452,50 @@ def test_mcp_proxy_validates_its_configuration(tmp_path: Path) -> None:
             server_name="a.b",
         )
     assert isinstance(now_utc(), datetime)
+
+
+PR = "github:pr:findajay/Open-model-fabric#42"
+
+
+def test_receipts_filter_by_reference(world: World) -> None:
+    service = service_for(world)
+    tagged = service.submit(
+        {
+            "request": request(world, "logs.delete", references=[PR, "recall:memory:m1"]),
+            "delegation_chain": world.chain,
+        }
+    )["receipt"]
+    submit(service, world, "logs.delete")
+    assert service.receipts()["total"] == 2
+    found = service.receipts(reference=PR)
+    assert (found["total"], found["receipts"][0]["receipt"]) == (1, tagged)
+    assert service.receipts(reference="github:pr:other/repo#1")["total"] == 0
+
+
+def test_mcp_proxy_adds_references_to_the_signed_request_only(tmp_path: Path) -> None:
+    agent, chain, gateway, _ = mcp_world(tmp_path)
+    replies = run_proxy(
+        {
+            "agent": agent,
+            "delegation_chain": chain,
+            "authorizer": LocalAuthorizer(gateway),
+            "references": [PR, PR],
+        },
+        [call(1, "read_file", path="a.py", references=["recall:memory:m1"])],
+    )
+    echoed = replies[1]["result"]["content"][0]["text"]
+    assert PR not in echoed  # the server got the tool call unchanged
+    assert "recall:memory:m1" in echoed
+    [receipt] = list(Ledger(tmp_path / "ledger.jsonl"))
+    assert receipt["request"]["arguments"]["references"] == ["recall:memory:m1", PR]
+    service = GatewayService(gateway)
+    assert service.receipts(reference=PR)["receipts"][0]["receipt"] == receipt
+
+
+def test_http_receipts_filter(world: World, http: tuple[GatewayService, GatewayClient]) -> None:
+    _, client = http
+    tagged = client.submit(request(world, "logs.delete", references=[PR]), world.chain)
+    client.submit(request(world, "logs.delete"), world.chain)
+    found = client.receipts(reference=PR)
+    assert found["total"] == 1
+    assert found["receipts"][0]["ref"] == tagged["receipt_ref"]

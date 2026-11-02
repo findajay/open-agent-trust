@@ -16,6 +16,9 @@ All notable changes are documented here. The format follows
 - `Gateway.authorize()`, `attach_approval()`, `complete()` and `release()`: the two phases
   of `execute()`, for tools that run elsewhere or approvals that arrive later.
 - `receipt_reference()` and `Ledger.find()` for `agentproof:sha256:…` references.
+- `github:pr:<owner>/<repo>#<number>` reference kind; `oat mcp-proxy --reference` adds
+  reference URIs to every signed request, and `GET /v1/receipts?reference=` finds a
+  change's receipts.
 
 ## [0.1.0]
 

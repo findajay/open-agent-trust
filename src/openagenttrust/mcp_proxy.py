@@ -39,7 +39,7 @@ from .canonical import CanonicalizationError, canonical_bytes
 from .client import GatewayClient, GatewayClientError
 from .gateway import Authorization, Gateway, RequestRejected
 from .keys import SigningKey
-from .ledger import receipt_reference
+from .ledger import receipt_reference, references_of
 from .requests import create_request
 
 META_KEY = "openagenttrust/receipt"
@@ -161,6 +161,7 @@ class McpProxy:
         authorizer: Authorizer,
         server_name: str,
         resource_argument: str | None = None,
+        references: Sequence[str] = (),
         client_in: IO[bytes] | None = None,
         client_out: IO[bytes] | None = None,
         log: Callable[[str], None] | None = None,
@@ -175,6 +176,7 @@ class McpProxy:
         self.authorizer = authorizer
         self.server_name = server_name
         self.resource_argument = resource_argument
+        self.references = list(dict.fromkeys(references))
         self.client_in = client_in if client_in is not None else sys.stdin.buffer
         self.client_out = client_out if client_out is not None else sys.stdout.buffer
         self.log = log or (lambda line: sys.stderr.write(f"oat mcp-proxy: {line}\n"))
@@ -189,6 +191,17 @@ class McpProxy:
 
     def action_for(self, tool: str) -> str:
         return f"mcp.{self.server_name}.{tool}"
+
+    def signed_arguments(self, arguments: dict[str, Any]) -> dict[str, Any]:
+        """The tool arguments, plus this proxy's references in ``references``.
+
+        Only the signed request carries the added references; the server gets the tool
+        call unchanged.
+        """
+        if not self.references:
+            return arguments
+        merged = list(dict.fromkeys([*references_of(arguments), *self.references]))
+        return {**arguments, "references": merged}
 
     def resource_for(self, arguments: dict[str, Any]) -> str:
         if self.resource_argument is not None:
@@ -262,7 +275,7 @@ class McpProxy:
         action = self.action_for(tool)
         resource = self.resource_for(arguments)
         try:
-            request = create_request(self.agent, action, resource, arguments)
+            request = create_request(self.agent, action, resource, self.signed_arguments(arguments))
             verdict = self.authorizer.authorize(request, self.delegation_chain)
         except CanonicalizationError as exc:
             self._blocked(message_id, f"arguments can't be signed: {exc}", None)

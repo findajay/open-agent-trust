@@ -17,6 +17,7 @@ receipt", every tool writes references to the others in the same form.
 | Code | `git+` repository URL, `@` full commit, `#` path, optional `:L<start>-L<end>` | `git+https://github.com/findajay/Open-model-fabric@cea75b0…#python/omf/core/services/routing.py:L40-L72` |
 | Model call | `<gateway>:request:` + the gateway's request id | `omf:request:req-123`, `ballast:request:…` |
 | Knowledge item | BallastOS's existing form | `ballast://source/knowledge:<id>` |
+| Change (pull request) | `github:pr:` + `<owner>/<repo>#<number>` | `github:pr:findajay/Open-model-fabric#42` |
 
 Rules:
 
@@ -48,6 +49,12 @@ Example request arguments for an agent edit:
   ]
 }
 ```
+
+To tie every action of an agent session to the change it works on (the Studio's change
+dossier, ADR 0001 in open-engineering-studio), start the MCP proxy with
+`--reference github:pr:<owner>/<repo>#<number>`. The proxy adds the reference to each signed
+request's `arguments.references` (the MCP server still gets the tool call unchanged), and
+`GET /v1/receipts?reference=<uri>` on `oat serve` returns that change's receipts.
 
 After the gateway issues the receipt, Recall can record the outcome with an `evidence` line
 `agentproof:sha256:<digest of that receipt>`.

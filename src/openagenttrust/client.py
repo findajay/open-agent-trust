@@ -96,5 +96,13 @@ class GatewayClient:
         )
         return dict(self._call("POST", f"/v1/approvals/{quote(action_id)}", body))
 
+    def receipts(
+        self, *, limit: int = 50, offset: int = 0, reference: str | None = None
+    ) -> dict[str, Any]:
+        query = f"limit={limit}&offset={offset}"
+        if reference is not None:
+            query += "&reference=" + quote(reference, safe="")
+        return dict(self._call("GET", f"/v1/receipts?{query}"))
+
     def receipt(self, ref: str) -> dict[str, Any]:
         return dict(self._call("GET", f"/v1/receipts/{quote(ref, safe='')}"))

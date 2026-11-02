@@ -49,7 +49,7 @@ loopback.
 | `GET /v1/actions` | | `{actions}`: actions still held in memory (finished ones for an hour), newest first |
 | `GET /v1/approvals` | | actions awaiting approval, oldest first |
 | `POST /v1/approvals/{id}` | `{approval}` (signed document) or `{decision: "approved" \| "rejected", reason?}` | the action |
-| `GET /v1/receipts` | `?limit=50&offset=0` | `{total, receipts: [{ref, receipt}]}`, newest first |
+| `GET /v1/receipts` | `?limit=50&offset=0&reference=URI` | `{total, receipts: [{ref, receipt}]}`, newest first; `reference` keeps receipts whose `request.arguments.references` contains that URI |
 | `GET /v1/receipts/{ref}` | `agentproof:sha256:…`, `sha256:…` or a receipt id | `{ref, receipt}` |
 | `POST /v1/verify` | `{receipt}` | the verification report (all checks) |
 | `GET /v1/ledger` | | the ledger as JSON Lines (`application/x-ndjson`), oldest first |
@@ -95,6 +95,12 @@ passes every message through unchanged, except `tools/call`:
 | `action` | `mcp.<server>.<tool>`, e.g. `mcp.fs.write_file` |
 | `resource` | the `--resource-arg` argument when it is a valid name (e.g. the `path`), else `mcp:<server>` |
 | `arguments` | the tool arguments (they must be in the canonical JSON subset: no floats) |
+
+With `--reference URI` (repeatable), the proxy also adds those reference URIs to
+`arguments.references` of every signed request, merged with any the tool call already has.
+Use it to tie a session's actions to the change it works on, e.g.
+`--reference github:pr:findajay/Open-model-fabric#42`. Only the signed request carries them;
+the MCP server receives the tool call exactly as the client sent it.
 
 A delegation such as `actions: ["mcp.fs.read_*"], resources: ["workspace/*"]` then limits
 the agent, and policy rules match the same names.
