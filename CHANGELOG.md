@@ -6,6 +6,17 @@ All notable changes are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- `oat serve`: the gateway as an HTTP API. Submit actions, approve or reject pending
+  ones (long-polling until decided), report outcomes, browse and verify receipts.
+- `oat mcp-proxy`: runs a stdio MCP server behind the gateway; every `tools/call` is
+  signed as the agent, decided by policy, approved if required and receipted. Blocked
+  calls fail closed with a tool error the model can read.
+- `Gateway.authorize()`, `attach_approval()`, `complete()` and `release()`: the two phases
+  of `execute()`, for tools that run elsewhere or approvals that arrive later.
+- `receipt_reference()` and `Ledger.find()` for `agentproof:sha256:…` references.
+
 ## [0.1.0]
 
 ### Added

@@ -16,6 +16,13 @@ from typing import Any
 
 from .canonical import canonical_bytes, digest
 
+REFERENCE_PREFIX = "agentproof:"
+
+
+def receipt_reference(receipt: dict[str, Any]) -> str:
+    """The shared reference URI of a receipt: ``agentproof:sha256:<hex>``."""
+    return REFERENCE_PREFIX + digest(receipt)
+
 
 class LedgerError(ValueError):
     """A receipt does not extend the ledger."""
@@ -28,6 +35,7 @@ class Ledger:
         self.path = path
         self._receipts: list[dict[str, Any]] = []
         self._request_digests: set[str] = set()
+        self._by_digest: dict[str, dict[str, Any]] = {}
         self.head: str | None = None
         if path is not None and path.exists():
             for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
@@ -43,6 +51,14 @@ class Ledger:
         self._receipts.append(receipt)
         self._request_digests.add(str(receipt.get("request_digest")))
         self.head = digest(receipt)
+        self._by_digest[self.head] = receipt
+
+    def find(self, digest_or_id: str) -> dict[str, Any] | None:
+        """The receipt with this digest (``sha256:…``, ``agentproof:`` prefix optional) or id."""
+        key = digest_or_id.removeprefix(REFERENCE_PREFIX)
+        if key in self._by_digest:
+            return self._by_digest[key]
+        return next((r for r in self._receipts if r.get("id") == key), None)
 
     def contains_request(self, request_digest: str) -> bool:
         return request_digest in self._request_digests
