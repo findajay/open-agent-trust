@@ -15,6 +15,9 @@ openagenttrust/
   ledger.py        append-only hash-chained receipt log
   gateway.py       enforcement point: authenticate → decide → execute → receipt
   verify.py        independent verification of receipts and ledgers
+  server.py        `oat serve`: the gateway as an HTTP API     (stdlib http.server)
+  client.py        client for that API                          (stdlib urllib)
+  mcp_proxy.py     `oat mcp-proxy`: policy on MCP tools/call    (stdio)
   integrations/    optional adapters (Open Model Fabric)
   cli.py, demo.py  `oat` command line
 ```

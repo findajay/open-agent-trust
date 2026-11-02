@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import os
+import secrets
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -12,6 +14,7 @@ from typing import Any
 
 from . import __version__
 from .delegation import DelegationError, issue_delegation
+from .gateway import Gateway
 from .keys import InvalidKeyError, PublicKey, SigningKey
 from .ledger import Ledger, LedgerError
 from .models import Scope, to_document
@@ -19,6 +22,8 @@ from .policy import Policy, PolicyError
 from .schemas import write_schemas
 from .timeutil import parse_duration
 from .verify import Report, verify_ledger, verify_receipt
+
+TOKEN_ENV = "OAT_API_TOKEN"  # noqa: S105 - a variable name
 
 
 class CliError(Exception):
@@ -177,6 +182,135 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0 if ok else 1
 
 
+def _anchors(args: argparse.Namespace) -> list[str]:
+    anchors = [_key_id(v) for v in args.anchor]
+    if args.trust:
+        data = _read_json(Path(args.trust))
+        anchors += [_key_id(v) for v in data.get("trust_anchors", [])]
+    if not anchors:
+        raise CliError("give at least one --anchor (or --trust FILE)")
+    return anchors
+
+
+def _local_gateway(args: argparse.Namespace) -> Gateway:
+    policy = _policy(args)
+    if policy is None:
+        raise CliError("give the gateway's --policy FILE")
+    try:
+        ledger = Ledger(args.ledger)
+    except LedgerError as exc:
+        raise CliError(str(exc)) from exc
+    return Gateway(
+        _signing_key(args.gateway_key), policy, trust_anchors=_anchors(args), ledger=ledger
+    )
+
+
+def _api_token(generate: bool) -> str:
+    token = os.environ.get(TOKEN_ENV, "")
+    if token:
+        return token
+    if not generate:
+        raise CliError(f"set {TOKEN_ENV} to the token of the `oat serve` API")
+    token = secrets.token_urlsafe(32)
+    print(f"oat serve: no {TOKEN_ENV} set; this run's API token is {token}", file=sys.stderr)
+    return token
+
+
+def cmd_serve(args: argparse.Namespace) -> int:
+    from .server import GatewayService, make_server, serve
+
+    gateway = _local_gateway(args)
+    try:
+        approval_timeout = parse_duration(args.approval_timeout)
+        outcome_timeout = parse_duration(args.outcome_timeout)
+    except ValueError as exc:
+        raise CliError(str(exc)) from exc
+    service = GatewayService(
+        gateway,
+        gateways=[_key_id(v) for v in args.gateway],
+        approver_key=_signing_key(args.approver_key) if args.approver_key else None,
+        approval_timeout=approval_timeout,
+        outcome_timeout=outcome_timeout,
+    )
+    try:
+        server = make_server(
+            service,
+            token=_api_token(generate=True),
+            host=args.host,
+            port=args.port,
+            cors_origin=args.cors_origin,
+        )
+    except (OSError, ValueError) as exc:
+        raise CliError(f"cannot listen on {args.host}:{args.port}: {exc}") from exc
+    print(
+        f"oat serve: gateway {gateway.key.key_id[:24]}... on http://{args.host}:{args.port}"
+        f" (ledger {args.ledger}, {len(gateway.ledger)} receipts)",
+        file=sys.stderr,
+    )
+    with contextlib.suppress(KeyboardInterrupt):
+        serve(server, service)
+    return 0
+
+
+def cmd_mcp_proxy(args: argparse.Namespace) -> int:
+    from .client import GatewayClient
+    from .mcp_proxy import Authorizer, LocalAuthorizer, McpProxy, RemoteAuthorizer
+
+    upstream = args.upstream[1:] if args.upstream[:1] == ["--"] else args.upstream
+    chain = _read_json(Path(args.chain))
+    if not isinstance(chain, list):
+        raise CliError(f"{args.chain}: expected a JSON list of delegations")
+    authorizer: Authorizer
+    if args.gateway_url:
+        try:
+            client = GatewayClient(args.gateway_url, _api_token(generate=False))
+            wait = parse_duration(args.approval_wait)
+        except ValueError as exc:
+            raise CliError(str(exc)) from exc
+        authorizer = RemoteAuthorizer(
+            client,
+            approval_wait=wait,
+            on_pending=lambda a: print(
+                f"oat mcp-proxy: {a['action']} on {a['resource']} awaits approval ({a['id']})",
+                file=sys.stderr,
+            ),
+        )
+    elif args.gateway_key:
+        authorizer = LocalAuthorizer(_local_gateway(args))
+    else:
+        raise CliError("give --gateway-url (an `oat serve` API) or --gateway-key (local)")
+    try:
+        proxy = McpProxy(
+            upstream,
+            agent=_signing_key(args.agent_key),
+            delegation_chain=chain,
+            authorizer=authorizer,
+            server_name=args.server,
+            resource_argument=args.resource_arg,
+        )
+        return proxy.run()
+    except (ValueError, OSError) as exc:
+        raise CliError(str(exc)) from exc
+
+
+def _add_gateway_options(parser: argparse.ArgumentParser, *, required: bool) -> None:
+    parser.add_argument(
+        "--gateway-key", required=required, metavar="FILE", help="the gateway's signing key"
+    )
+    parser.add_argument("--policy", required=required, metavar="FILE", help="policy YAML")
+    parser.add_argument(
+        "--anchor",
+        action="append",
+        default=[],
+        metavar="KEY",
+        help="trusted root key id or key file (repeatable)",
+    )
+    parser.add_argument("--trust", metavar="FILE", help="JSON file with 'trust_anchors'")
+    parser.add_argument(
+        "--ledger", default="oat-ledger.jsonl", metavar="FILE", help="receipt ledger (JSON Lines)"
+    )
+
+
 def _add_trust_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--anchor",
@@ -263,6 +397,55 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", default="oat-demo", help="empty or new output directory")
     p.add_argument("--omf-url", help="Open Model Fabric base URL (token from OAT_OMF_TOKEN)")
     p.set_defaults(func=cmd_demo)
+
+    p = sub.add_parser(
+        "serve",
+        help="run the gateway as an HTTP API (token from " + TOKEN_ENV + ")",
+        description="Serve the gateway over HTTP: submit actions, approve them, browse and "
+        f"verify receipts. Clients authenticate with the bearer token in {TOKEN_ENV}; "
+        "if it is unset, a random token is generated and printed.",
+    )
+    _add_gateway_options(p, required=True)
+    p.add_argument(
+        "--gateway",
+        action="append",
+        default=[],
+        metavar="KEY",
+        help="another gateway whose receipts /v1/verify should trust (repeatable)",
+    )
+    p.add_argument(
+        "--approver-key",
+        metavar="FILE",
+        help="sign approvals made through the API with this key (it must be a policy approver)",
+    )
+    p.add_argument("--host", default="127.0.0.1")
+    p.add_argument("--port", type=int, default=8787)
+    p.add_argument("--cors-origin", metavar="URL", help="browser origin allowed to call the API")
+    p.add_argument("--approval-timeout", default="10m", metavar="DURATION")
+    p.add_argument("--outcome-timeout", default="10m", metavar="DURATION")
+    p.set_defaults(func=cmd_serve)
+
+    p = sub.add_parser(
+        "mcp-proxy",
+        help="enforce policy on an MCP server's tools/call over stdio",
+        description="Run an MCP server behind the gateway: every tools/call is signed as "
+        "the agent, decided by the policy (and approved, if required) and receipted. "
+        "Example: oat mcp-proxy --agent-key agent.json --chain chain.json --server fs "
+        "--gateway-url http://127.0.0.1:8787 -- npx @modelcontextprotocol/server-filesystem .",
+    )
+    p.add_argument("--agent-key", required=True, metavar="FILE")
+    p.add_argument("--chain", required=True, metavar="FILE", help="delegation chain (JSON list)")
+    p.add_argument("--server", required=True, metavar="NAME", help="actions are mcp.NAME.<tool>")
+    p.add_argument(
+        "--resource-arg",
+        metavar="ARG",
+        help="tool argument used as the resource (default: mcp:NAME)",
+    )
+    p.add_argument("--gateway-url", metavar="URL", help=f"an `oat serve` API ({TOKEN_ENV})")
+    p.add_argument("--approval-wait", default="10m", metavar="DURATION")
+    _add_gateway_options(p, required=False)
+    p.add_argument("upstream", nargs=argparse.REMAINDER, help="-- MCP server command")
+    p.set_defaults(func=cmd_mcp_proxy)
     return parser
 
 

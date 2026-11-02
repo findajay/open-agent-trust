@@ -14,7 +14,9 @@ Items are ordered within each milestone. Nothing here is a commitment to a date.
 
 ## v0.2: enforce real tool calls
 
-- [ ] MCP gateway: a proxy that enforces policy on MCP `tools/call` and issues receipts
+- [x] MCP gateway: a proxy that enforces policy on MCP `tools/call` and issues receipts
+  (stdio; Streamable HTTP still open)
+- [x] `oat serve`: the gateway as an HTTP API with pending approvals, for the Studio
 - [ ] Agent SDK helpers for at least one framework (OpenAI Agents SDK or LangGraph)
 - [ ] Delegation revocation lists
 - [ ] Policy adapters: OPA (Rego) and Cedar

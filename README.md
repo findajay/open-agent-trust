@@ -241,6 +241,8 @@ OpenAgentTrust governs what agents do with it.
 | `oat ledger verify LEDGER --trust FILE [--policy F]` | Verify a whole receipt ledger |
 | `oat schema [--out DIR]` | Write the AgentProof JSON Schemas |
 | `oat demo [--out DIR] [--omf-url URL]` | Run the end-to-end demo |
+| `oat serve --gateway-key F --policy F --trust F [--approver-key F]` | Run the gateway as an HTTP API ([docs](docs/gateway-api.md)) |
+| `oat mcp-proxy --agent-key F --chain F --server NAME [--gateway-url URL] -- CMD…` | Enforce policy on an MCP server's `tools/call` ([docs](docs/gateway-api.md#oat-mcp-proxy)) |
 
 </details>
 
@@ -261,8 +263,9 @@ also catches false decisions, and the `enforcement` check catches receipts that 
 forbidden executions. See the [threat model](docs/threat-model.md) for what remains.
 
 **Does it work with MCP?**
-Today you call the gateway from your tool layer. An MCP proxy that enforces policy on
-`tools/call` is the top item for v0.2.
+Yes. `oat mcp-proxy` runs any stdio MCP server behind the gateway: every `tools/call` is
+decided by the policy, approved if required, and receipted. See the
+[gateway API docs](docs/gateway-api.md).
 
 **Can other languages verify receipts?**
 That's the point of the [spec](protocol/agentproof-v0.1.md): canonical JSON, Ed25519,
