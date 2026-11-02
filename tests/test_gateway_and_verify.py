@@ -201,3 +201,19 @@ def test_ledger_detects_removed_and_reordered_receipts(world: World) -> None:
     assert verify_ledger(receipts, **world.trust).ok
     assert not verify_ledger([receipts[0], receipts[2]], **world.trust).ok
     assert not verify_ledger([receipts[1], receipts[0], receipts[2]], **world.trust).ok
+
+
+def test_references_in_arguments_are_bound_to_the_receipt(world: World) -> None:
+    """docs/integration/shared-references.md relies on this: references can't be swapped."""
+    refs = ["recall:memory:3f0c9d2e-8b1a-4c5e-9a77-2d4e6f1b0c13"]
+    req = create_request(
+        world.agent, "sensor.read", "plant-7/pump/P-3", {"references": refs}, now=NOW
+    )
+    receipt = world.gateway.execute(req, world.chain, ok_tool).receipt
+    assert receipt["request"]["arguments"]["references"] == refs
+    assert verify_receipt(receipt, **world.trust).ok
+
+    swapped = copy.deepcopy(receipt)
+    swapped["request"]["arguments"]["references"] = ["recall:memory:another"]
+    failing = {c.name for c in verify_receipt(swapped, **world.trust).failures}
+    assert {"request-digest", "agent-signature", "gateway-signature"} <= failing
