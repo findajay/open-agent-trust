@@ -24,6 +24,12 @@ def receipt_reference(receipt: dict[str, Any]) -> str:
     return REFERENCE_PREFIX + digest(receipt)
 
 
+def references_of(arguments: Any) -> list[str]:
+    """The reference URIs in a request's ``arguments.references`` (non-strings ignored)."""
+    value = arguments.get("references") if isinstance(arguments, dict) else None
+    return [r for r in value if isinstance(r, str)] if isinstance(value, list) else []
+
+
 class LedgerError(ValueError):
     """A receipt does not extend the ledger."""
 

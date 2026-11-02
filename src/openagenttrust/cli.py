@@ -287,6 +287,7 @@ def cmd_mcp_proxy(args: argparse.Namespace) -> int:
             authorizer=authorizer,
             server_name=args.server,
             resource_argument=args.resource_arg,
+            references=args.reference,
         )
         return proxy.run()
     except (ValueError, OSError) as exc:
@@ -440,6 +441,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--resource-arg",
         metavar="ARG",
         help="tool argument used as the resource (default: mcp:NAME)",
+    )
+    p.add_argument(
+        "--reference",
+        action="append",
+        default=[],
+        metavar="URI",
+        help="reference URI added to every signed request, e.g. github:pr:owner/repo#12",
     )
     p.add_argument("--gateway-url", metavar="URL", help=f"an `oat serve` API ({TOKEN_ENV})")
     p.add_argument("--approval-wait", default="10m", metavar="DURATION")
