@@ -16,7 +16,7 @@ classifiers = [
 # Runtime dependencies are pinned for repeatable builds; uv.lock pins the full tree.
 dependencies = [
   "cryptography==50.0.2",
-  "pydantic==2.14.1",
+  "pydantic==2.14.2",
   "pyyaml==6.0.3",
 ]
 
